@@ -28,6 +28,7 @@ foreach ($words as $w) {
         echo 'Could not find the definition of the word: ' . $w . '<br>';
     }
 
+    echo '<br>';
     $counter++;
 }
 echo '<hr>';
@@ -84,6 +85,12 @@ function doesntInterfere($word, $posX, $posY, $dir) {
     global $table;    
 
     if($dir == 0) {
+        if(strcmp('X', $table[$posX][$posY - 1]))
+            return false;
+
+        if(strcmp('X', $table[$posX][$posY + strlen($word)]))
+            return false;
+
         for($i = 0; $i < strlen($word); $i++) {
             if(strcmp($word[$i], $table[$posX][$posY + $i]) && strcmp('X', $table[$posX][$posY + $i]))
                 return false;
@@ -110,7 +117,13 @@ function doesntInterfere($word, $posX, $posY, $dir) {
         }
     }
     else {
-        for($i = 0; $i < strlen($word); $i++) {
+         if(strcmp('X', $table[$posX - 1][$posY]))
+            return false;
+
+        if(strcmp('X', $table[$posX + strlen($word)][$posY]))
+            return false;
+        
+    for($i = 0; $i < strlen($word); $i++) {
             if(strcmp($word[$i], $table[$posX + $i][$posY]) && strcmp('X', $table[$posX + $i][$posY]))
                 return false;
 
@@ -162,49 +175,51 @@ function getLetterPos($letterNum, $posX, $posY, $dir) {
 
 
 // 0 = left to right, 1 = up to down
-$direction = 1;
 
 loop:
 // for each word not on the board
 for($i = 0; $i < count($words); $i++) {
-
-    // for each word on the board
-    for($j = 0; $j < count($onTable); $j++) {
+    for($d = 0; $d < 2; $d++) {    
+        $direction = $d;
         
-        $a = $words[$i];
-        $b = $onTable[$j];
-
-        //echo 'Comparing: ' . $a . ' to ' . $b['word'] . '<br>';
-        
-        // for each letter in word a
-        for($l = 0; $l < strlen($a); $l++) {
+        // for each word on the board
+        for($j = 0; $j < count($onTable); $j++) {
             
-            // for each letter in word b
-            for($k = 0; $k < strlen($b['word']); $k++) {
+            $a = $words[$i];
+            $b = $onTable[$j];
 
-                // if they share a character
-                if($a[$l] == $b['word'][$k]) {
-                    $posB = getLetterPos($k, $b['posX'], $b['posY'], $b['dir']);
-                    $posA = getWordOrigin($l, $posB[0], $posB[1], $direction); 
+            //echo 'Comparing: ' . $a . ' to ' . $b['word'] . '<br>';
+            
+            // for each letter in word a
+            for($l = 0; $l < strlen($a); $l++) {
+                
+                // for each letter in word b
+                for($k = 0; $k < strlen($b['word']); $k++) {
 
-                    if($direction != $b['dir'] && doesntInterfere($a, $posA[0], $posA[1], $direction)) {
-                        //echo 'Inserting<br>';
+                    // if they share a character
+                    if($a[$l] == $b['word'][$k]) {
+                        $posB = getLetterPos($k, $b['posX'], $b['posY'], $b['dir']);
+                        $posA = getWordOrigin($l, $posB[0], $posB[1], $direction); 
 
-                        insert($a, $posA[0], $posA[1], $direction);
-                        array_splice($words, $i, 1);
-                   
-                        // another word has been added to the table 
-                        $obj = [
-                            'word' => $a,
-                            'posX' => $posA[0],
-                            'posY' => $posA[1],
-                            'dir' => $direction,
-                        ];
-                        array_push($onTable, $obj);
-                        
-                        // change direction
-                        $direction = !$direction;
-                        goto loop;
+                        if($direction != $b['dir'] && doesntInterfere($a, $posA[0], $posA[1], $direction)) {
+                            //echo 'Inserting<br>';
+
+                            insert($a, $posA[0], $posA[1], $direction);
+                            array_splice($words, $i, 1);
+                       
+                            // another word has been added to the table 
+                            $obj = [
+                                'word' => $a,
+                                'posX' => $posA[0],
+                                'posY' => $posA[1],
+                                'dir' => $direction,
+                            ];
+                            array_push($onTable, $obj);
+                            
+                            // change direction
+                            $direction = !$direction;
+                            goto loop;
+                        }
                     }
                 }
             }
@@ -269,10 +284,36 @@ for($i = $startR; $i < $endR; $i++) {
     for($j = $startC; $j < $endC; $j++) {
         
         if(strcmp($table[$i][$j], 'X')) {
+            echo "<input style='text-align: center' type='text' size='1' maxlength='1' />";
+        }
+        else {
+            echo "<input style='opacity: 0;' type='text' size='1' disabled/>";
+        }
+    }    
+    echo '<br>';
+}
+echo '</p>';
+
+echo "<script type='text/javascript'>
+    function showAnswer() {
+        console.log('click');
+        var x = document.getElementsByClassName('ans');
+        x[0].style.opacity = 1;
+    }
+</script>";
+
+echo "<button onclick='showAnswer()'>Show Answer</button><br>";
+
+// print the crossword
+echo "<p class='ans' style='font-family: monospace; opacity: 0;'>";
+for($i = $startR; $i < $endR; $i++) {
+    for($j = $startC; $j < $endC; $j++) {
+        
+        if(strcmp($table[$i][$j], 'X')) {
             echo $table[$i][$j] . ' ';
         }
         else {
-            echo '.  ';
+            echo '&nbsp; ';
         }
     }    
     echo '<br>';
