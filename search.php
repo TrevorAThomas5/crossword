@@ -1,11 +1,34 @@
 <?php
+
+// define sql connection constants    
+DEFINE ('DB_USER', 'trevor');
+DEFINE ('DB_PASSWORD', 'Grandma11223344!');
+DEFINE ('DB_HOST', 'localhost');
+DEFINE ('DB_NAME', 'test1');
+
+// connect to sql database
+$dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
+OR die('Failed to connect to MySQL ' . mysqli_connect_error());
+
 echo "<h1>Cross Word:</h1>";
 
 $words = $_POST['words'];
 
 echo "<b>Find the words:</b><br>";
+$counter = 0;
 foreach ($words as $w) {
-    echo $w . '<br>';
+    $query = "SELECT definition FROM english WHERE word='$w'";
+    $response = @mysqli_query($dbc, $query);
+    
+    if($response) {
+        $result = mysqli_fetch_array($response);
+        echo $counter . '. &ensp;' . $result['definition'] . '<br>';
+    }
+    else {
+        echo 'Could not find the definition of the word: ' . $w . '<br>';
+    }
+
+    $counter++;
 }
 echo '<hr>';
 
