@@ -37,6 +37,12 @@ echo '<hr>';
 $scale = 500;
 $center = 25;
 
+// store word num
+$wordNums = [];
+for($i = 0; $i < count($words); $i++) {
+    $wordNums[$words[$i]] = $i;
+}
+
 // blank out table
 array_multisort(array_map('strlen', $words), $words);
 $words = array_reverse($words);
@@ -62,10 +68,12 @@ $obj = [
 $onTable[0] = $obj;
 array_splice($words, 0, 1);
 
+$posNums = [];
+$posNums[$scale * $center + $center] = 0;
 
 // insert into the table
 function insert($word, $posX, $posY, $dir) {
-    global $table;
+    global $table, $posNums, $wordNums, $scale;
 
     if($dir == 0) {
         for($i = 0; $i < strlen($word); $i++) {
@@ -77,6 +85,8 @@ function insert($word, $posX, $posY, $dir) {
             $table[$posX + $i][$posY] = $word[$i]; 
         }
     }
+
+    $posNums[$scale * $posX + $posY] = $wordNums[$word];
 }
 
 
@@ -282,12 +292,13 @@ printC:
 echo "<p style='font-family: monospace'>";
 for($i = $startR; $i < $endR; $i++) {
     for($j = $startC; $j < $endC; $j++) {
-        
+ 
         if(strcmp($table[$i][$j], 'X')) {
-            echo "<input style='text-align: center' type='text' size='1' maxlength='1' />";
+            $val = $posNums[$scale * $i + $j];
+            echo "<input value='$val' style='padding: 12px; text-align: center' type='text' size='2' maxlength='1' />";
         }
         else {
-            echo "<input style='opacity: 0;' type='text' size='1' disabled/>";
+            echo "<input style='opacity: 0; padding: 12px;' type='text' size='2' disabled/>";
         }
     }    
     echo '<br>';
@@ -296,13 +307,12 @@ echo '</p>';
 
 echo "<script type='text/javascript'>
     function showAnswer() {
-        console.log('click');
         var x = document.getElementsByClassName('ans');
-        x[0].style.opacity = 1;
+        x[0].style.opacity = (x[0].style.opacity == 1) ? 0 : 1;
     }
 </script>";
 
-echo "<button onclick='showAnswer()'>Show Answer</button><br>";
+echo "<button onclick='showAnswer()'>Show/Hide Answer</button><br>";
 
 // print the crossword
 echo "<p class='ans' style='font-family: monospace; opacity: 0;'>";
